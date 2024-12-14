@@ -19,17 +19,41 @@ const registerUser = asyncHandler (async(req,res)=>{
     if (existedUser) {
         throw new ApiError(400, "User with email or username already exists")
     }
-    const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverLocalPath = req.files?.coverImage[0]?.path
+
+    console.warn(req.files);
+    
+    const avatarLocalPath = req.files?.avatar?.[0]?.path
+    const coverLocalPath = req.files?.coverImage?.[0]?.path
     if (!avatarLocalPath) {
             throw new ApiError(400, "Avatar file is missing")
         }
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
 
-    let coverImage = ""
-    if (coverLocalPath) {
-        coverImage = await uploadOnCloudinary(coverImage)
-    }
+    // const avatar = await uploadOnCloudinary(avatarLocalPath)
+    // let coverImage = ""
+    // if (coverLocalPath) {
+    //     coverImage = await uploadOnCloudinary(coverImage)
+    // }
+
+        let avatar;
+        try {
+             avatar = await uploadOnCloudinary(avatarLocalPath)
+             console.log("Uploaded avatar", avatar);
+             
+        } catch (error) {
+            console.log("Error uploading avatar", error);
+            throw new ApiError(500, "failed to upload the avatar")
+            
+        }
+        let coverImage;
+        try {
+             coverImage = await uploadOnCloudinary(coverLocalPath)
+             console.log("Uploaded avatar", coverImage);
+             
+        } catch (error) {
+            console.log("Error uploading coverImage", error);
+            throw new ApiError(500, "failed to upload the coverImage")
+            
+        }
 
     const user = await User.create({
         fullname,
