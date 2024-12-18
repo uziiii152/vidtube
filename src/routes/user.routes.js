@@ -1,8 +1,8 @@
 
 import express from 'express';
 import {upload} from "../middlewares/multer.middlewares.js"
-import {registerUser} from '../controller/user.controllers.js'; 
-
+import {registerUser,logoutUser} from '../controller/user.controllers.js'; 
+import verifyJWT from "../middlewares/auth.middlewares.js"
 
 
 
@@ -15,5 +15,5 @@ userRouter.route('/register').post(upload.fields([{
     maxCount:1
 }]),registerUser);
 
-
+userRouter.route('/logout').post(verifyJWT,logoutUser)
 export default userRouter; 
