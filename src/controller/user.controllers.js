@@ -203,9 +203,111 @@ return res
   }
 })
 
+
+const changeCurrentPassword = asyncHandler(async(req,res)=>{
+    const {oldPassword,newPassword}  = req.body
+
+   const user = User.findById(req.user?._id)
+
+   const isPasswordValid = await user.isPasswordCorrect(oldPassword)
+
+   if (!isPasswordValid) {
+        throw new apiError(401, "Oldpassword is incorrect")
+   }
+
+   user.password = newPassword
+
+   await new user.save({validateBeforeSave: false})
+
+   return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "password changed successfully"))
+})
+
+const getCurrentUser = asyncHandler(async(req,res)=>{
+    return res.status(200)
+                .json(new ApiResponse(200, req.User, "Current user details"))
+})
+
+const updateAccountDetails = asyncHandler(async(req,res)=>{
+    const {fullname, email} = req.body
+
+
+    if (!fullname || !email) {
+        throw new apiError(401,"fullname and email is required")
+    }
+
+   const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set{
+            fullname,
+            email
+        }
+    },
+        {new: true}
+    ).select(" -password -refreshToken")
+
+return res.status(200)
+            .json(new ApiResponse(200,user,"Account updated successfully"))
+
+})
+
+const updateUserAvatar = asyncHandler(async(req,res)=>{
+    const avatarPath = await req.file?.path
+
+    const avatar =await uploadOnCloudinary(avatarPath)
+
+    if (!avatar.url) {
+        throw new apiError(401, "avatar url is not found")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set{
+                avatar: avatar.url
+            }
+        },
+        {new: true}
+    )
+
+
+    return res.status(200)
+                .json(new ApiResponse(200, user, "Avatar is updated successfully!"))
+})
+
+const updateUserCoverImage = asyncHandler(async(req,res)=>{
+    const coverImagePath = await req.file?.path
+
+    const coverImage =await uploadOnCloudinary(coverImagePath)
+
+    if (!coverImage.url) {
+        throw new apiError(401, "cover image url is not found")
+    }
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set{
+                coverImage: coverImage.url
+        }
+    }.
+    {new: true}
+    )
+
+    return res.status(200)
+                .json(200,user,"Cover image is updated successfully!")
+})
+
 export { 
     registerUser,
     loginUser,
     refreshAccessToken,
-    logoutUser
+    logoutUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCoverImage,
+    changeCurrentPassword,
+    getCurrentUser
 };
